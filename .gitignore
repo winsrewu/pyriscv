@@ -102,3 +102,8 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# generated
+app/app.elf
+app/app.lst
+app/app.mem
