@@ -6,8 +6,7 @@ from pyriscv_operator import *
 
     
 class PyRiscv:
-    def __init__(self,imem,dmem,reset_vec=0,bw=32):
-        self._imem = imem
+    def __init__(self,dmem,reset_vec=0,bw=32):
         self._dmem = dmem
         self._pc   = reset_vec
         self._regs = PyRiscvRegs(32,bw)
@@ -20,15 +19,26 @@ class PyRiscv:
         while not self._exit:
             inst = self.__stage_if(self._pc)
             decode_map = self.__stage_decode(inst)
-            self.__stage_exec(decode_map)
+
+            # print(f"{hex(PyRiscvOperator(32).unsigned(self._pc))} : {hex(inst._d)} ({bin(inst._d)})")
+            # print("Registers: " + str(self._regs))
+
+            try:
+                self.__stage_exec(decode_map)
+            except Exception as e:
+                print("Instruction: " + bin(inst._d))
+                
+                raise e
+
+            # print("\n-----------\n")
         
         
     def __stage_if(self,pc):
         return PyRiscvLogic(
-            self._imem[pc] + 
-            (self._imem[pc+1] << 8) + 
-            (self._imem[pc+2] << 16) + 
-            (self._imem[pc+3] << 24))
+            self._dmem[pc] + 
+            (self._dmem[pc+1] << 8) + 
+            (self._dmem[pc+2] << 16) + 
+            (self._dmem[pc+3] << 24))
     
     def __stage_decode(self,w):
         decode_map = PyRiscvStruct()
@@ -46,10 +56,11 @@ class PyRiscv:
         decode_map.IMMI                = PyRiscvOperator(12).signed(w[31:20])
         decode_map.IMMS                = PyRiscvOperator(12).signed(w[11:7] + (w[31:25]<<5))
         decode_map.IMMU                = w[31:12] << 12
-        decode_map.EXIT                = (int(w) == 0x00002033)
+        decode_map.EBREAK              = (int(w) == 0x00100073)
+        decode_map.ECALL               = (int(w) == 0x00000073)
         
         #FUNCT7
-        if decode_map.FUNCT7 == 0x20:
+        if decode_map.FUNCT7 == 0x20 and decode_map.OPCODE == PYRSISCV_OPCODE.OP:
             if decode_map.FUNCT3_OP_IMM_OP == PYRSISCV_FUNCT3_OP_IMM_OP.ADD:
                 decode_map.FUNCT3_OP_IMM_OP = PYRSISCV_FUNCT3_OP_IMM_OP.SUB
             elif decode_map.FUNCT3_OP_IMM_OP == PYRSISCV_FUNCT3_OP_IMM_OP.SRL:
@@ -57,35 +68,44 @@ class PyRiscv:
         return decode_map
     
     def __stage_exec(self,decode_map):
+        if decode_map.CODECLASS != PYRSISCV_CODECLASS.BASE:
+            raise Exception("Invalid code class")
         
         if decode_map.OPCODE == PYRSISCV_OPCODE.JAL:
             self._regs[decode_map.RD] = self._pc + 4
-            self._pc = decode_map.IMMJ
+            self._pc += decode_map.IMMJ
+
         elif decode_map.OPCODE == PYRSISCV_OPCODE.JALR:
-            self._regs[decode_map.RD] = self._pc + 4
-            self._pc = ((decode_map.IMM + self._regs[decode_map.RS1]) | 0x1) - 1 + self._pc
+            t = self._pc + 4
+            self._pc = ((decode_map.IMMI + self._regs[decode_map.RS1]) | 0x1) - 1
+            self._regs[decode_map.RD] = t
+
         elif decode_map.OPCODE == PYRSISCV_OPCODE.BRANCH:
             if self._operator(decode_map.FUNCT3_BRANCH,self._regs[decode_map.RS1],self._regs[decode_map.RS2]):
                 self._pc += decode_map.IMMB
             else:
                 self._pc += 4
+
         elif decode_map.OPCODE == PYRSISCV_OPCODE.OP_IMM:
             self._regs[decode_map.RD] = self._operator(decode_map.FUNCT3_OP_IMM_OP,self._regs[decode_map.RS1],decode_map.IMMI)
             self._pc += 4
+
         elif decode_map.OPCODE == PYRSISCV_OPCODE.OP:
             self._regs[decode_map.RD] = self._operator(decode_map.FUNCT3_OP_IMM_OP,self._regs[decode_map.RS1],self._regs[decode_map.RS2]) 
             self._pc += 4
+
         elif decode_map.OPCODE == PYRSISCV_OPCODE.LUI:
             self._regs[decode_map.RD] = decode_map.IMMU
             self._pc += 4
+
         elif decode_map.OPCODE == PYRSISCV_OPCODE.AUIPC:
-            self._pc += decode_map.IMMU
-            self._regs[decode_map.RD] = self._pc   
+            self._regs[decode_map.RD] = self._pc + decode_map.IMMU
+            self._pc += 4
+
         elif decode_map.OPCODE == PYRSISCV_OPCODE.LOAD:
             dmem_base = self._regs[decode_map.RS1] + decode_map.IMMI
             if decode_map.FUNCT3_LOADSTORE == PYRSISCV_FUNCT3_LOAD_STORE.W:
-                self._regs[decode_map.RD] = PyRiscvOperator(self._bw).signed(self._dmem[dmem_base] + (self._dmem[dmem_base + 1] << 8) + \
-                                            (self._dmem[dmem_base + 2] << 16) + (self._dmem[dmem_base + 3] << 24))
+                self._regs[decode_map.RD] = PyRiscvOperator(self._bw).signed(self._dmem[dmem_base] + (self._dmem[dmem_base + 1] << 8) + (self._dmem[dmem_base + 2] << 16) + (self._dmem[dmem_base + 3] << 24))
             elif decode_map.FUNCT3_LOADSTORE == PYRSISCV_FUNCT3_LOAD_STORE.H:
                 self._regs[decode_map.RD] = PyRiscvOperator(16).signed(self._dmem[dmem_base] + (self._dmem[dmem_base + 1] << 8))
             elif decode_map.FUNCT3_LOADSTORE == PYRSISCV_FUNCT3_LOAD_STORE.HU:
@@ -94,6 +114,11 @@ class PyRiscv:
                 self._regs[decode_map.RD] = PyRiscvOperator(8).signed(self._dmem[dmem_base])
             elif decode_map.FUNCT3_LOADSTORE == PYRSISCV_FUNCT3_LOAD_STORE.BU:
                 self._regs[decode_map.RD] = self._dmem[dmem_base]
+            else:
+                raise Exception("Invalid load instruction")
+            
+            self._pc += 4
+
         elif decode_map.OPCODE == PYRSISCV_OPCODE.STORE:
             dmem_base = self._regs[decode_map.RS1] + decode_map.IMMS
             dmem_data = PyRiscvOperator(self._bw).unsigned(self._regs[decode_map.RS2])
@@ -106,11 +131,46 @@ class PyRiscv:
                 self._dmem[dmem_base]   = dmem_data & 0xFF
                 self._dmem[dmem_base+1] = (dmem_data & 0xFF00) >> 8
             elif decode_map.FUNCT3_LOADSTORE == PYRSISCV_FUNCT3_LOAD_STORE.B:
-                self._dmem[dmem_base]   = dmem_data & 0xFF               
-        if decode_map.EXIT:
-            self._exit = True
+                self._dmem[dmem_base]   = dmem_data & 0xFF
+            else:
+                raise Exception("Invalid store instruction")
+
+            self._pc += 4
+            
+        elif decode_map.OPCODE == PYRSISCV_OPCODE.FENCE:
+            self._pc += 4
+
+        elif decode_map.EBREAK:
+            self._pc += 4
+
+        elif decode_map.ECALL:
+            ecall_num = PYRSISCV_ECALL_NUMBER.FV(self._regs[17])
+
+            if ecall_num == PYRSISCV_ECALL_NUMBER.EXIT:
+                print("Exiting with code " + str(self._regs[10]))
+                self._exit = True
+            elif ecall_num == PYRSISCV_ECALL_NUMBER.WRITE:
+                # print(f"Writing {self._regs[12]} bytes to file descriptor {self._regs[11]}")
+
+                if self._regs[10] == 1:
+                    addr_tmp = self._regs[11]
+                    for i in range(self._regs[12]):
+                        print(chr(self._dmem[addr_tmp+i]), end='')
+
+                    # set return value to length of written data
+                    self._regs[10] = self._regs[12]
+                else:
+                    raise Exception("Invalid file descriptor")
+
+            else:
+                raise Exception("Invalid ecall number", self._regs[17])
+
+            self._pc += 4
+
+        else:
+            raise Exception("Invalid instruction")
     
 if __name__ == '__main__':
     import sys
-    imem = PyMEM(sys.argv[1])
-    PyRiscv(imem,imem)
+    dmem = PyMEM(sys.argv[1])
+    PyRiscv(dmem, reset_vec=0x80000000)

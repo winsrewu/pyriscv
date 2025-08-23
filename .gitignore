@@ -104,6 +104,14 @@ venv.bak/
 .mypy_cache/
 
 # generated
-app/app.elf
-app/app.lst
-app/app.mem
+*app.elf
+*app.lst
+*app.mem
+*res.txt
+*tmp.txt
+
+# vscode
+.vscode/
+
+# H files for c
+include/

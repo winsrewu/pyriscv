@@ -14,6 +14,7 @@ class PYRSISCV_OPCODE(PyRiscvEnum):
     OP        = 0b01100
     LOAD      = 0b00000
     STORE     = 0b01000
+    FENCE     = 0b00011
     
 class PYRSISCV_FUNCT3_OP_IMM_OP(PyRiscvEnum):
     ADD  = 0b000
@@ -41,3 +42,7 @@ class PYRSISCV_FUNCT3_LOAD_STORE(PyRiscvEnum):
     W  = 0b010
     BU = 0b100
     HU = 0b101
+
+class PYRSISCV_ECALL_NUMBER(PyRiscvEnum):
+    EXIT = 93
+    WRITE = 64

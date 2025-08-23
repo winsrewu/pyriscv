@@ -1,5 +1,5 @@
 # pyriscv
-A RISCV Emulator written in Python
+A RISCV Emulator written in Python, supports RV32I instruction set.
 
 Requires:
   python3.4+
@@ -7,11 +7,21 @@ Requires:
 No other libraries!!
 
 # run
+```bash
+cd app/c
+./build.sh
+python3 ../../src/pyriscv.py app.mem
+```
 
-    cd app
-    riscv32-unknown-elf-gcc -g -march=rv32i -mabi=ilp32 app.S -nostdlib -T link.ld -o app.elf
-    riscv32-unknown-elf-objdump -S -d app.elf > app.lst
-    riscv32-unknown-elf-objcopy -F verilog app.elf app.mem
-    python3 ../src/pyriscv.py app.mem
+# good to know
+- FENCE and FENCE.I instructions do NOT have any effect on the emulator.
+- EBREAK instruction do NOT have any effect on the emulator.
+- for ECALL, a7 register is for passing system call number, a0-a6 registers are for passing arguments (a0 for the first argument),
+return value is stored in a0 register.
+- write system call should only write to STDOUT, whose fileno is 1.
 
-All data write to x0 will print to console
+# system calls table
+| number | function | args | return |
+|--------|----------|------|--------|
+| 64     | write    | fd, ptr, len | number of bytes written |
+| 93     | exit     | error_code | - |

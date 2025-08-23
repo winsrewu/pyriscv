@@ -36,10 +36,9 @@ class PyRiscvOperator:
     
     def unsigned(self,x):
         bw = self._bw
-        if x > 0:
-            return x
-        else:
+        if x < 0:
             return (1<<bw) + x
+        return x
     
     def limit(self,x):
         bw = self._bw
@@ -66,18 +65,20 @@ class PyRiscvOperator:
     def sll(self,a,b):
         b = self.unsigned(b)
         shamt = b & 0x1F
-        return self.limit(a<<b)
+        a = self.unsigned(a)
+        return self.limit(a<<shamt)
     
     def sra(self,a,b):
         b = self.unsigned(b)
         shamt = b & 0x1F
-        return self.limit(a>>b)    
+        a = self.signed(a)
+        return self.limit(a>>shamt)    
     
     def srl(self,a,b):
         b = self.unsigned(b)
         shamt = b & 0x1F
         a = self.unsigned(a)
-        return self.limit(a>>b) 
+        return self.limit(a>>shamt) 
     
     def beq(self,a,b):
         return a == b
@@ -92,7 +93,7 @@ class PyRiscvOperator:
         return self.unsigned(a) < self.unsigned(b)
     
     def bge(self,a,b):
-        return a > b
+        return a >= b
     
     def bgeu(self,a,b):
-        return self.unsigned(a) > self.unsigned(b)    
+        return self.unsigned(a) >= self.unsigned(b)    
