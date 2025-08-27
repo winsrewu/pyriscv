@@ -48,7 +48,7 @@ class PyMEM:
         # k = self._mdata.get(addr, 0)
         # if k < 0:
         #     k += 1 << 32
-        # print("loading data from memory", hex(k2), addr, hex(k))
+        # print("loading data from memory", hex(PyRiscvOperator(32).unsigned(addr)), hex(self._mdata.get(PyRiscvOperator(32).unsigned(addr), 0)))
         # print("data in 2,147,483,696 to 2,147,483,699", self._mdata.get(2147483696, 114), self._mdata.get(2147483697, 0), self._mdata.get(2147483698, 0), self._mdata.get(2147483699, 0))
 
         return self._mdata.get(PyRiscvOperator(32).unsigned(addr), 0)
@@ -59,7 +59,7 @@ class PyMEM:
         # k2 = addr
         # if k2 < 0:
         #     k2 += 1 << 32
-        # print("writing data to memory", hex(k2), hex(k))
+        # print("writing data to memory", hex(PyRiscvOperator(32).unsigned(addr)), hex(data))
 
         self._mdata[PyRiscvOperator(32).unsigned(addr)] = data
     def keys(self):
