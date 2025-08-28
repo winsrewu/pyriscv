@@ -21,9 +21,12 @@ python3 ../../src/pyriscv.py app.mem
 - for ECALL, a7 register is for passing system call number, a0-a6 registers are for passing arguments (a0 for the first argument),
 return value is stored in a0 register.
 - write system call should only write to STDOUT, whose fileno is 1.
+- read system call should only read from STDIN, whose fileno is 0.
+- cpp is really complicated, i tried to use cpp's iostream to output, but failed (i've tested it on spike, it will try to load from 0x0, idk why). But just using g++ to compile some simple stuff is ok.
 
 # system calls table
 | number | function | args | return |
 |--------|----------|------|--------|
+| 63     | read     | fd, ptr, len | number of bytes read |
 | 64     | write    | fd, ptr, len | number of bytes written |
 | 93     | exit     | error_code | - |

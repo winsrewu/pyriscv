@@ -6,12 +6,13 @@ from pyriscv_operator import *
 
     
 class PyRiscv:
-    def __init__(self,dmem,reset_vec=0,bw=32):
+    def __init__(self,dmem,reset_vec=0,bw=32, input_buffer=""):
         self._dmem = dmem
         self._pc   = reset_vec
         self._regs = PyRiscvRegs(32,bw)
         self._operator = PyRiscvOperator(bw)
         self._bw = bw
+        self.input_buffer = input_buffer
         self.__control()
         
     def __control(self):
@@ -160,7 +161,25 @@ class PyRiscv:
                     # set return value to length of written data
                     self._regs[10] = self._regs[12]
                 else:
-                    raise Exception("Invalid file descriptor")
+                    raise Exception("Invalid file descriptor in write ecall")
+
+            elif ecall_num == PYRSISCV_ECALL_NUMBER.READ:
+                if self._regs[10] == 0:
+                    addr_tmp = self._regs[11]
+                    reaf_count = 0
+
+                    for i in range(self._regs[12]):
+                        if len(self.input_buffer) == 0:
+                            break
+                        else:
+                            self._dmem[addr_tmp+i] = ord(self.input_buffer[0])
+                            self.input_buffer = self.input_buffer[1:]
+                            reaf_count += 1
+
+                    # set return value to length of read data
+                    self._regs[10] = reaf_count
+                else:
+                    raise Exception("Invalid file descriptor in read ecall")
 
             else:
                 raise Exception("Invalid ecall number", self._regs[17])
@@ -173,4 +192,6 @@ class PyRiscv:
 if __name__ == '__main__':
     import sys
     dmem = PyMEM(sys.argv[1])
-    PyRiscv(dmem, reset_vec=0x80000000)
+    input_buffer = sys.argv[2]
+
+    PyRiscv(dmem, reset_vec=0x80000000, input_buffer=input_buffer)

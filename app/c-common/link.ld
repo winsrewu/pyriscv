@@ -33,6 +33,7 @@ SECTIONS
     } > RAM
 
     _end = .;
+    end = _end;
 
     /* heap */
     

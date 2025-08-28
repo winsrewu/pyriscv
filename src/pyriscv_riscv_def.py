@@ -46,3 +46,4 @@ class PYRSISCV_FUNCT3_LOAD_STORE(PyRiscvEnum):
 class PYRSISCV_ECALL_NUMBER(PyRiscvEnum):
     EXIT = 93
     WRITE = 64
+    READ = 63

@@ -14,7 +14,7 @@ _start:
     li a7, 93                 # syscall number for exit
     ecall
 
-    # Data section
-    .section .rodata
-msg:
-    .ascii "MCBBS\n"
+# Data section
+.section .rodata
+    msg:
+        .ascii "MCBBS\n"
