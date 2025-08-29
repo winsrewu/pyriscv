@@ -12,6 +12,8 @@ class PyRiscvRegs:
         if a == 0:
             return
         
+        # print("X%d <= %d(%x)" % (a,v,PyRiscvOperator(32).unsigned(v)))
+        
         self._regs[a] = v
 
         # fmt = '0%dx' % (self._bw / 4)
@@ -33,3 +35,20 @@ class PyRiscvRegs:
             
             s += "X%d: %x\n" % (i, k)
         return s
+
+    def to_dict(self):
+        s = {}
+        for i in range(len(self._regs)):
+            k = self.__getitem__(i)
+            if k < 0:
+                k += 1 << 32
+            
+            s[format(i, '05b')] = format(k, '0%dx' % (self._bw / 4))
+        return s
+    
+    def to_dict_str(self):
+        d = self.to_dict()
+        s = "{"
+        for k, v in d.items():
+            s += "%s: \"%s\", " % (k, v)
+        return s[:-2] + "}"

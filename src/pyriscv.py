@@ -22,7 +22,9 @@ class PyRiscv:
             decode_map = self.__stage_decode(inst)
 
             # print(f"{hex(PyRiscvOperator(32).unsigned(self._pc))} : {hex(inst._d)} ({bin(inst._d)})")
+            # print(f"PC={hex(PyRiscvOperator(32).unsigned(self._pc))}")
             # print("Registers: " + str(self._regs))
+            # print("Registers=" + self._regs.to_dict_str())
 
             try:
                 self.__stage_exec(decode_map)
@@ -161,12 +163,13 @@ class PyRiscv:
                     # set return value to length of written data
                     self._regs[10] = self._regs[12]
                 else:
-                    raise Exception("Invalid file descriptor in write ecall")
+                    raise Exception("Invalid file descriptor in write ecall", self._regs[10])
 
             elif ecall_num == PYRSISCV_ECALL_NUMBER.READ:
                 if self._regs[10] == 0:
+                    # print(hex(PyRiscvOperator(32).unsigned(self._regs[11])))
                     addr_tmp = self._regs[11]
-                    reaf_count = 0
+                    read_count = 0
 
                     for i in range(self._regs[12]):
                         if len(self.input_buffer) == 0:
@@ -174,12 +177,12 @@ class PyRiscv:
                         else:
                             self._dmem[addr_tmp+i] = ord(self.input_buffer[0])
                             self.input_buffer = self.input_buffer[1:]
-                            reaf_count += 1
+                            read_count += 1
 
                     # set return value to length of read data
-                    self._regs[10] = reaf_count
+                    self._regs[10] = read_count
                 else:
-                    raise Exception("Invalid file descriptor in read ecall")
+                    raise Exception("Invalid file descriptor in read ecall", self._regs[10])
 
             else:
                 raise Exception("Invalid ecall number", self._regs[17])
