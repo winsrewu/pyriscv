@@ -13,11 +13,15 @@ class PyRiscv:
         self._operator = PyRiscvOperator(bw)
         self._bw = bw
         self.input_buffer = input_buffer
+
+        self.statics = {"count": 0}
+
         self.__control()
         
     def __control(self):
         self._exit = False
         while not self._exit:
+            self.statics["count"] += 1
             inst = self.__stage_if(self._pc)
             decode_map = self.__stage_decode(inst)
 
@@ -34,6 +38,8 @@ class PyRiscv:
                 raise e
 
             # print("\n-----------\n")
+
+        print(f"Runned {self.statics["count"]} instructions.")
         
         
     def __stage_if(self,pc):
