@@ -17,14 +17,11 @@ class PyRiscv:
         self.statics = {"count": 0}
 
     def run(self):
-        self.__control()
-        
-    def __control(self):
         self._exit = False
         while not self._exit:
             self.statics["count"] += 1
-            inst = self.__stage_if(self._pc)
-            decode_map = self.__stage_decode(inst)
+            inst = self.fetch(self._pc)
+            decode_map = self.decode(inst)
 
             # print(f"{hex(PyRiscvOperator(32).unsigned(self._pc))} : {hex(inst._d)} ({bin(inst._d)})")
             # print(f"PC={hex(PyRiscvOperator(32).unsigned(self._pc))}")
@@ -32,7 +29,7 @@ class PyRiscv:
             # print("Registers=" + self._regs.to_dict_str())
 
             try:
-                self.__stage_exec(decode_map)
+                self.exec(decode_map)
             except Exception as e:
                 print("Instruction: " + bin(inst._d))
                 
@@ -43,14 +40,14 @@ class PyRiscv:
         print(f"Runned {self.statics["count"]} instructions.")
         
         
-    def __stage_if(self,pc):
+    def fetch(self,pc):
         return PyRiscvLogic(
             self._dmem[pc] + 
             (self._dmem[pc+1] << 8) + 
             (self._dmem[pc+2] << 16) + 
             (self._dmem[pc+3] << 24))
     
-    def __stage_decode(self,w):
+    def decode(self,w):
         decode_map = PyRiscvStruct()
         decode_map.CODECLASS           = PYRSISCV_CODECLASS.FV(w[1:0])
         decode_map.OPCODE              = PYRSISCV_OPCODE.FV(w[6:2])
@@ -77,7 +74,7 @@ class PyRiscv:
                 decode_map.FUNCT3_OP_IMM_OP = PYRSISCV_FUNCT3_OP_IMM_OP.SRA
         return decode_map
     
-    def __stage_exec(self,decode_map):
+    def exec(self,decode_map):
         if decode_map.CODECLASS != PYRSISCV_CODECLASS.BASE:
             raise Exception("Invalid code class")
         
