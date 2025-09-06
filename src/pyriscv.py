@@ -16,6 +16,7 @@ class PyRiscv:
 
         self.statics = {"count": 0}
 
+    def run(self):
         self.__control()
         
     def __control(self):
@@ -203,4 +204,5 @@ if __name__ == '__main__':
     dmem = PyMEM(sys.argv[1])
     input_buffer = sys.argv[2]
 
-    PyRiscv(dmem, reset_vec=0x80000000, input_buffer=input_buffer)
+    emulator = PyRiscv(dmem, reset_vec=0x80000000, input_buffer=input_buffer)
+    emulator.run()
