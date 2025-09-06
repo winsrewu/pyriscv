@@ -7,12 +7,12 @@ from pyriscv_operator import *
     
 class PyRiscv:
     def __init__(self,dmem,reset_vec=0,bw=32, input_buffer=""):
-        self._dmem = dmem
-        self._pc   = reset_vec
-        self._regs = PyRiscvRegs(32,bw)
-        self._operator = PyRiscvOperator(bw)
+        self._dmem          = dmem
+        self._pc            = reset_vec
+        self._regs          = PyRiscvRegs(32,bw)
+        self._operator      = PyRiscvOperator(bw)
         self._bw = bw
-        self.input_buffer = input_buffer
+        self.input_buffer   = input_buffer
 
         self.statics = {"count": 0}
 
@@ -53,7 +53,7 @@ class PyRiscv:
         decode_map.OPCODE              = PYRSISCV_OPCODE.FV(w[6:2])
         decode_map.FUNCT3_OP_IMM_OP    = PYRSISCV_FUNCT3_OP_IMM_OP.FV(w[14:12])
         decode_map.FUNCT3_BRANCH       = PYRSISCV_FUNCT3_BRANCH.FV(w[14:12])
-        decode_map.FUNCT3_LOAD_STORE    = PYRSISCV_FUNCT3_LOAD_STORE.FV(w[14:12])
+        decode_map.FUNCT3_LOAD_STORE   = PYRSISCV_FUNCT3_LOAD_STORE.FV(w[14:12])
         decode_map.FUNCT7              = w[31:25]
         decode_map.RD                  = w[11:7]
         decode_map.RS1                 = w[19:15]
