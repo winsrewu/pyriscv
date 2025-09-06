@@ -53,7 +53,7 @@ class PyRiscv:
         decode_map.OPCODE              = PYRSISCV_OPCODE.FV(w[6:2])
         decode_map.FUNCT3_OP_IMM_OP    = PYRSISCV_FUNCT3_OP_IMM_OP.FV(w[14:12])
         decode_map.FUNCT3_BRANCH       = PYRSISCV_FUNCT3_BRANCH.FV(w[14:12])
-        decode_map.FUNCT3_LOADSTORE    = PYRSISCV_FUNCT3_LOAD_STORE.FV(w[14:12])
+        decode_map.FUNCT3_LOADSTORE    = PYRSISCV_FUNCT3_LOADSTORE.FV(w[14:12])
         decode_map.FUNCT7              = w[31:25]
         decode_map.RD                  = w[11:7]
         decode_map.RS1                 = w[19:15]
@@ -111,15 +111,15 @@ class PyRiscv:
 
         elif decode_map.OPCODE == PYRSISCV_OPCODE.LOAD:
             dmem_base = self._regs[decode_map.RS1] + decode_map.IMMI
-            if decode_map.FUNCT3_LOADSTORE == PYRSISCV_FUNCT3_LOAD_STORE.W:
+            if decode_map.FUNCT3_LOADSTORE == PYRSISCV_FUNCT3_LOADSTORE.W:
                 self._regs[decode_map.RD] = PyRiscvOperator(self._bw).signed(self._dmem[dmem_base] + (self._dmem[dmem_base + 1] << 8) + (self._dmem[dmem_base + 2] << 16) + (self._dmem[dmem_base + 3] << 24))
-            elif decode_map.FUNCT3_LOADSTORE == PYRSISCV_FUNCT3_LOAD_STORE.H:
+            elif decode_map.FUNCT3_LOADSTORE == PYRSISCV_FUNCT3_LOADSTORE.H:
                 self._regs[decode_map.RD] = PyRiscvOperator(16).signed(self._dmem[dmem_base] + (self._dmem[dmem_base + 1] << 8))
-            elif decode_map.FUNCT3_LOADSTORE == PYRSISCV_FUNCT3_LOAD_STORE.HU:
+            elif decode_map.FUNCT3_LOADSTORE == PYRSISCV_FUNCT3_LOADSTORE.HU:
                 self._regs[decode_map.RD] = self._dmem[dmem_base] + (self._dmem[dmem_base + 1] << 8)
-            elif decode_map.FUNCT3_LOADSTORE == PYRSISCV_FUNCT3_LOAD_STORE.B:
+            elif decode_map.FUNCT3_LOADSTORE == PYRSISCV_FUNCT3_LOADSTORE.B:
                 self._regs[decode_map.RD] = PyRiscvOperator(8).signed(self._dmem[dmem_base])
-            elif decode_map.FUNCT3_LOADSTORE == PYRSISCV_FUNCT3_LOAD_STORE.BU:
+            elif decode_map.FUNCT3_LOADSTORE == PYRSISCV_FUNCT3_LOADSTORE.BU:
                 self._regs[decode_map.RD] = self._dmem[dmem_base]
             else:
                 raise Exception("Invalid load instruction")
@@ -129,15 +129,15 @@ class PyRiscv:
         elif decode_map.OPCODE == PYRSISCV_OPCODE.STORE:
             dmem_base = self._regs[decode_map.RS1] + decode_map.IMMS
             dmem_data = PyRiscvOperator(self._bw).unsigned(self._regs[decode_map.RS2])
-            if decode_map.FUNCT3_LOADSTORE == PYRSISCV_FUNCT3_LOAD_STORE.W:
+            if decode_map.FUNCT3_LOADSTORE == PYRSISCV_FUNCT3_LOADSTORE.W:
                 self._dmem[dmem_base]   = dmem_data & 0xFF
                 self._dmem[dmem_base+1] = (dmem_data & 0xFF00) >> 8
                 self._dmem[dmem_base+2] = (dmem_data & 0xFF0000) >> 16
                 self._dmem[dmem_base+3] = (dmem_data & 0xFF000000) >> 24
-            elif decode_map.FUNCT3_LOADSTORE == PYRSISCV_FUNCT3_LOAD_STORE.H:
+            elif decode_map.FUNCT3_LOADSTORE == PYRSISCV_FUNCT3_LOADSTORE.H:
                 self._dmem[dmem_base]   = dmem_data & 0xFF
                 self._dmem[dmem_base+1] = (dmem_data & 0xFF00) >> 8
-            elif decode_map.FUNCT3_LOADSTORE == PYRSISCV_FUNCT3_LOAD_STORE.B:
+            elif decode_map.FUNCT3_LOADSTORE == PYRSISCV_FUNCT3_LOADSTORE.B:
                 self._dmem[dmem_base]   = dmem_data & 0xFF
             else:
                 raise Exception("Invalid store instruction")

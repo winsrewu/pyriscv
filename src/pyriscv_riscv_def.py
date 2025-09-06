@@ -36,7 +36,7 @@ class PYRSISCV_FUNCT3_BRANCH(PyRiscvEnum):
     BLTU = 0b110
     BGEU = 0b111
     
-class PYRSISCV_FUNCT3_LOAD_STORE(PyRiscvEnum):
+class PYRSISCV_FUNCT3_LOADSTORE(PyRiscvEnum):
     B  = 0b000
     H  = 0b001
     W  = 0b010
