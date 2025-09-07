@@ -1,5 +1,6 @@
 
 from pyriscv_riscv_def import *
+from pyriscv_stat import *
 import operator
 
 class PyRiscvOperator:
@@ -26,6 +27,8 @@ class PyRiscvOperator:
         }        
         
     def __call__(self,funct3,*args):
+        if funct3 == PYRSISCV_FUNCT3_OP_IMM_OP.XOR or funct3 == PYRSISCV_FUNCT3_OP_IMM_OP.OR or funct3 == PYRSISCV_FUNCT3_OP_IMM_OP.AND:
+            add_bitops()
         return self._exec_map[funct3](*args)
 
     def signed(self,x):
@@ -51,49 +54,62 @@ class PyRiscvOperator:
         return self.signed(x)
         
     def slt(self,a,b):
+        add_arithmeticops("compare")
         return 1 if a < b else 0
 
     def sltu(self,a,b):
+        add_arithmeticops("compare")
         return 1 if self.unsigned(a) < self.unsigned(b) else 0
         
     def add(self,a,b):
+        add_arithmeticops("add")
         return self.limit(a+b)
 
     def sub(self,a,b):
+        add_arithmeticops("sub")
         return self.limit(a-b)
     
     def sll(self,a,b):
+        add_bitops()
         b = self.unsigned(b)
         shamt = b & 0x1F
         a = self.unsigned(a)
         return self.limit(a<<shamt)
     
     def sra(self,a,b):
+        add_bitops()
         b = self.unsigned(b)
         shamt = b & 0x1F
         a = self.signed(a)
         return self.limit(a>>shamt)    
     
     def srl(self,a,b):
+        add_bitops()
         b = self.unsigned(b)
         shamt = b & 0x1F
         a = self.unsigned(a)
         return self.limit(a>>shamt) 
     
     def beq(self,a,b):
+        add_arithmeticops("compare")
         return a == b
     
     def bne(self,a,b):
+        add_arithmeticops("compare")
         return a != b    
     
     def blt(self,a,b):
+        add_arithmeticops("compare")
         return a < b
     
     def bltu(self,a,b):
+        add_arithmeticops("compare")
         return self.unsigned(a) < self.unsigned(b)
     
     def bge(self,a,b):
+        add_arithmeticops("compare")
         return a >= b
     
     def bgeu(self,a,b):
+        add_arithmeticops("compare")
         return self.unsigned(a) >= self.unsigned(b)    

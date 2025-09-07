@@ -1,10 +1,10 @@
 from pymem import PyMEM
 from pyriscv_regs import PyRiscvRegs
-from pyriscv_types import *    
-from pyriscv_riscv_def import *    
-from pyriscv_operator import *   
+from pyriscv_types import *
+from pyriscv_riscv_def import *
+from pyriscv_operator import *
+from pyriscv_stat import *
 
-    
 class PyRiscv:
     def __init__(self,dmem,reset_vec=0,bw=32, input_buffer=""):
         self._dmem          = dmem
@@ -14,12 +14,10 @@ class PyRiscv:
         self._bw = bw
         self.input_buffer   = input_buffer
 
-        self.statics = {"count": 0}
-
     def run(self):
         self._exit = False
         while not self._exit:
-            self.statics["count"] += 1
+            add_count()
             inst = self.fetch(self._pc)
             decode_map = self.decode(inst)
 
@@ -37,7 +35,9 @@ class PyRiscv:
 
             # print("\n-----------\n")
 
-        print(f"Runned {self.statics["count"]} instructions.")
+        print(f"Ran {get_stat()["count"]} instructions. Bit ops: {get_stat()['bitops']}, Arithmetic ops: {get_stat()['arithmeticops']}")
+        print(f"Switch chance: {get_stat()['switch_chance']}")
+        print(f"Arithmetic count: {get_arithmetic_count()}")
         
         
     def fetch(self,pc):
@@ -202,4 +202,5 @@ if __name__ == '__main__':
     input_buffer = sys.argv[2]
 
     emulator = PyRiscv(dmem, reset_vec=0x80000000, input_buffer=input_buffer)
+    instance = emulator
     emulator.run()
