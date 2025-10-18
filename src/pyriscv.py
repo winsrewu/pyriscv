@@ -201,6 +201,6 @@ if __name__ == '__main__':
     dmem = PyMEM(sys.argv[1])
     input_buffer = sys.argv[2]
 
-    emulator = PyRiscv(dmem, reset_vec=0x80000000, input_buffer=input_buffer)
+    emulator = PyRiscv(dmem, reset_vec=0x00000000, input_buffer=input_buffer)
     instance = emulator
     emulator.run()
