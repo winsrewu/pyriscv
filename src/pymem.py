@@ -2,6 +2,7 @@
 # Author: jerry-jho@github
 
 from collections import OrderedDict
+from memory_tracer import MEM_TRACER
 from pyriscv_operator import *
 
 def PyMem_Iter(_mdata):
@@ -60,6 +61,8 @@ class PyMEM:
         # if k2 < 0:
         #     k2 += 1 << 32
         # print("writing data to memory", hex(PyRiscvOperator(32).unsigned(addr)), hex(data))
+
+        MEM_TRACER.log_memory_write(addr, data)
 
         self._mdata[PyRiscvOperator(32).unsigned(addr)] = data
     def keys(self):

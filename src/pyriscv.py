@@ -1,3 +1,4 @@
+from memory_tracer import MEM_TRACER
 from pymem import PyMEM
 from pyriscv_regs import PyRiscvRegs
 from pyriscv_types import *
@@ -21,6 +22,9 @@ class PyRiscv:
             inst = self.fetch(self._pc)
             decode_map = self.decode(inst)
 
+            MEM_TRACER.set_running_inst(self._pc, inst)
+
+            # print(f"{hex(PyRiscvOperator(32).unsigned(self._pc))}")
             # print(f"{hex(PyRiscvOperator(32).unsigned(self._pc))} : {hex(inst._d)} ({bin(inst._d)})")
             # print(f"PC={hex(PyRiscvOperator(32).unsigned(self._pc))}")
             # print("Registers: " + str(self._regs))
@@ -29,7 +33,14 @@ class PyRiscv:
             try:
                 self.exec(decode_map)
             except Exception as e:
-                print("Instruction: " + bin(inst._d))
+                print(f"Instruction: {bin(inst._d)}, PC: {hex(PyRiscvOperator(32).unsigned(self._pc))}")
+
+                print("Write trace:")
+                for k in range(0, 4):
+                    print(f"Write trace for {k}th byte:")
+                    for (addr, r_inst, data) in MEM_TRACER.get_memory_writes(self._pc + k):
+                        print(f"{hex(PyRiscvOperator(32).unsigned(addr))}: {bin(r_inst[31:0])} -> {hex(data)}")
+                    print()
                 
                 raise e
 
