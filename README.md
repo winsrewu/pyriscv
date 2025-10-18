@@ -23,7 +23,7 @@ return value is stored in a0 register.
 - write system call should only write to STDOUT, whose fileno is 1.
 - read system call should only read from STDIN, whose fileno is 0.
 - cpp is really complicated, i tried to use cpp's iostream to output, but failed (i've tested it on spike, it will try to load from 0x0, idk why). But just using g++ to compile some simple stuff is ok.
-- I now know why. I missed some of the initialization code. Check them in app/cpp-stream. Now std::cin and std::cout should work.
+- I now know why. There're some problems with the linker script, and i fixed it. Now most of the code should work fine.
 
 # system calls table
 | number | function | args | return |
