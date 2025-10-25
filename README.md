@@ -16,6 +16,7 @@ python3 ../../src/pyriscv.py app.mem
 ```
 
 # good to know
+- The default entry point is 0x0.
 - FENCE and FENCE.I instructions do NOT have any effect on the emulator.
 - EBREAK instruction do NOT have any effect on the emulator.
 - for ECALL, a7 register is for passing system call number, a0-a6 registers are for passing arguments (a0 for the first argument),
