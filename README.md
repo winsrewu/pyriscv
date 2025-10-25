@@ -31,7 +31,8 @@ For instance, for some programs, change that line from
 MAX(__DATA_BEGIN__ + 0x800, __BSS_END__ - 0x800));``
 to ``  __global_pointer$ = MIN(__SDATA_BEGIN__ + 0x800,
 MAX(__DATA_BEGIN__ + 0x800, __BSS_END__ - 0x800));`` will make it work.
-I made two versions of link script, you can check the difference between them through the build script of cpp-stream and cpp-stream-2.
+I made two versions of link script, you can check the difference between them through the build script of cpp-stream and cpp-stream-2. If this still doesn't work, you may modify the link script manually or just disable the global pointer feature
+via ``-Wl,--no-relax-gp`` option.
 
 # system calls table
 | number | function | args | return |
