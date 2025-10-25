@@ -3,7 +3,7 @@ from pyriscv_types import PyRiscvLogic, PyRiscvStruct
 import sys
 
 dmem = PyMEM(sys.argv[1])
-pc = 0x80000000
+pc = 0x0
 
 k = dmem[pc] + \
     (dmem[pc+1] << 8) + \
