@@ -4,8 +4,8 @@ ENTRY(_start)                /* Entry point */
 
 SECTIONS
 {
-    /* Load everything at physical address 0x80000000 */
-    . = 0x80000000;
+    /* Load everything at physical address 0x0 */
+    . = 0x0;
 
     .text : {
         *(.text)
