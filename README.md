@@ -25,6 +25,9 @@ return value is stored in a0 register.
 - read system call should only read from STDIN, whose fileno is 0.
 - cpp is really complicated, i tried to use cpp's iostream to output, but failed (i've tested it on spike, it will try to load from 0x0, idk why). But just using g++ to compile some simple stuff is ok.
 - I now know why. There're some problems with the linker script, and i fixed it. Now most of the code should work fine.
+- Global pointer is really easy to fail, you may need to adjust it manually for different programs.
+For instance, for some programs, change that line to ``  __global_pointer$ = MIN(__SDATA_BEGIN__ + 0x800,
+MAX(__DATA_BEGIN__ + 0x800, __BSS_END__ - 0x800));`` will make it work.
 
 # system calls table
 | number | function | args | return |
