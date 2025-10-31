@@ -16,6 +16,7 @@ python3 ../../src/pyriscv.py app.mem
 ```
 
 # good to know
+- This project uses Black Formatter to format python code.
 - The default entry point is 0x0.
 - FENCE and FENCE.I instructions do NOT have any effect on the emulator.
 - EBREAK instruction do NOT have any effect on the emulator.
