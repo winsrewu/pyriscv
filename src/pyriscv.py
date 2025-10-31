@@ -18,7 +18,7 @@ class PyRiscv:
 
     def dump(self, filename):
         with open(filename, "w") as f:
-            f.write(hex(PyRiscvOperator(32).unsigned(self._pc)) + "\n")
+            f.write(hex(PyRiscvOperator(32).unsigned(self._pc) + 4) + "\n")
             for i in range(0, 32):
                 f.write(hex(PyRiscvOperator(32).unsigned(self._regs[i])) + "\n")
             self._dmem.dump(f)
