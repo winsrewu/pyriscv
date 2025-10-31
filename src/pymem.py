@@ -9,7 +9,7 @@ from pyriscv_operator import *
 
 def PyMem_Iter(_mdata):
     _addr = 0
-    _max_addr = list(_mdata.keys())[-1]
+    _max_addr = max(_mdata.keys())
     while True:
         if _addr > _max_addr:
             return
