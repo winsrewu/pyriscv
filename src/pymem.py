@@ -2,6 +2,7 @@
 # Author: jerry-jho@github
 
 from collections import OrderedDict
+from io import TextIOWrapper
 from memory_tracer import MEM_TRACER
 from pyriscv_operator import *
 
@@ -70,6 +71,38 @@ class PyMEM:
         
     def keys(self):
         return PyMem_Iter(self._mdata)
+    
+    def dump(self, f: TextIOWrapper):
+        '''The same format as vlog_b8'''
+
+        last_addr = -2
+        cut_cd = 0
+        cr_cd = 0
+
+        for addr in self.keys():
+            if self[addr] == 0:
+                if addr != last_addr + 1 or cut_cd == 8:
+                    continue
+
+                cut_cd += 1
+            else:
+                cut_cd = 0
+
+
+            if addr != last_addr + 1:
+                cr_cd = 0
+                if last_addr != -2:
+                    f.write("\n")
+                f.write(f"@{PyRiscvOperator(32).unsigned(addr):08X}\n")
+
+            f.write(f"{self[addr]:02X} ")
+            cr_cd += 1
+
+            if cr_cd == 16:
+                f.write("\n")
+                cr_cd = 0
+
+            last_addr = addr
                     
 if __name__ == '__main__':
     import sys

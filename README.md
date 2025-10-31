@@ -40,3 +40,13 @@ via ``-Wl,--no-relax-gp`` option.
 | 63     | read     | fd, ptr, len | number of bytes read |
 | 64     | write    | fd, ptr, len | number of bytes written |
 | 93     | exit     | error_code | - |
+| 1025   | dump     | - | - |
+
+### explanation
+- calling dump system call will dump current pc,
+registers, memory to a file named "dump.txt".
+The first line of the file is the current pc + 4,
+which means the next instruction to be executed.
+The next 32 lines are the registers,
+all the lines after that are the memory,
+in (almost) the same format as the .mem files.

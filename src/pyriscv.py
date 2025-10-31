@@ -15,6 +15,13 @@ class PyRiscv:
         self._bw = bw
         self.input_buffer   = input_buffer
 
+    def dump(self, filename):
+        with open(filename, "w") as f:
+            f.write(hex(PyRiscvOperator(32).unsigned(self._pc)) + "\n")
+            for i in range(0, 32):
+                f.write(hex(PyRiscvOperator(32).unsigned(self._regs[i])) + "\n")
+            self._dmem.dump(f)
+
     def run(self):
         self._exit = False
         while not self._exit:
@@ -198,6 +205,11 @@ class PyRiscv:
                     self._regs[10] = read_count
                 else:
                     raise Exception("Invalid file descriptor in read ecall", self._regs[10])
+                
+            elif ecall_num == PYRSISCV_ECALL_NUMBER.DUMP:
+                print("Dumping memory...")
+                self.dump("dump.txt")
+                print("Done.")
 
             else:
                 raise Exception("Invalid ecall number", self._regs[17])

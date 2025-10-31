@@ -47,3 +47,4 @@ class PYRSISCV_ECALL_NUMBER(PyRiscvEnum):
     EXIT    = 93
     WRITE   = 64
     READ    = 63
+    DUMP    = 1025
