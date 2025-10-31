@@ -42,6 +42,7 @@ class PyMEM:
                     data = int(seg,base=16)
                     mdata[addr] = data
                     addr += 1
+
     def __getitem__(self,addr):
         # k2 = addr
         # if k2 < 0:
@@ -53,6 +54,7 @@ class PyMEM:
         # print("data in 2,147,483,696 to 2,147,483,699", self._mdata.get(2147483696, 114), self._mdata.get(2147483697, 0), self._mdata.get(2147483698, 0), self._mdata.get(2147483699, 0))
 
         return self._mdata.get(PyRiscvOperator(32).unsigned(addr), 0)
+    
     def __setitem__(self,addr,data):
         # k = data
         # if k < 0:
@@ -65,6 +67,7 @@ class PyMEM:
         MEM_TRACER.log_memory_write(addr, data)
 
         self._mdata[PyRiscvOperator(32).unsigned(addr)] = data
+        
     def keys(self):
         return PyMem_Iter(self._mdata)
                     
