@@ -1,115 +1,119 @@
-
 from pyriscv_riscv_def import *
 from pyriscv_stat import *
 import operator
 
+
 class PyRiscvOperator:
-    
-    def __init__(self,bw):
+
+    def __init__(self, bw):
         self._bw = bw
         self._exec_map = {
-            PYRSISCV_FUNCT3_OP_IMM_OP.ADD  : self.add,
-            PYRSISCV_FUNCT3_OP_IMM_OP.SUB  : self.sub,
-            PYRSISCV_FUNCT3_OP_IMM_OP.XOR  : operator.xor,
-            PYRSISCV_FUNCT3_OP_IMM_OP.OR   : operator.or_,
-            PYRSISCV_FUNCT3_OP_IMM_OP.AND  : operator.and_,
-            PYRSISCV_FUNCT3_OP_IMM_OP.SLT  : self.slt,  
-            PYRSISCV_FUNCT3_OP_IMM_OP.SLTU : self.sltu,
-            PYRSISCV_FUNCT3_OP_IMM_OP.SLL  : self.sll,
-            PYRSISCV_FUNCT3_OP_IMM_OP.SRL  : self.srl,
-            PYRSISCV_FUNCT3_OP_IMM_OP.SRA  : self.sra,
-            PYRSISCV_FUNCT3_BRANCH.BEQ     : self.beq,
-            PYRSISCV_FUNCT3_BRANCH.BNE     : self.bne,
-            PYRSISCV_FUNCT3_BRANCH.BLT     : self.blt,
-            PYRSISCV_FUNCT3_BRANCH.BLTU    : self.bltu,
-            PYRSISCV_FUNCT3_BRANCH.BGE     : self.bge,
-            PYRSISCV_FUNCT3_BRANCH.BGEU    : self.bgeu,            
-        }        
-        
-    def __call__(self,funct3,*args):
-        if funct3 == PYRSISCV_FUNCT3_OP_IMM_OP.XOR or funct3 == PYRSISCV_FUNCT3_OP_IMM_OP.OR or funct3 == PYRSISCV_FUNCT3_OP_IMM_OP.AND:
+            PYRSISCV_FUNCT3_OP_IMM_OP.ADD: self.add,
+            PYRSISCV_FUNCT3_OP_IMM_OP.SUB: self.sub,
+            PYRSISCV_FUNCT3_OP_IMM_OP.XOR: operator.xor,
+            PYRSISCV_FUNCT3_OP_IMM_OP.OR: operator.or_,
+            PYRSISCV_FUNCT3_OP_IMM_OP.AND: operator.and_,
+            PYRSISCV_FUNCT3_OP_IMM_OP.SLT: self.slt,
+            PYRSISCV_FUNCT3_OP_IMM_OP.SLTU: self.sltu,
+            PYRSISCV_FUNCT3_OP_IMM_OP.SLL: self.sll,
+            PYRSISCV_FUNCT3_OP_IMM_OP.SRL: self.srl,
+            PYRSISCV_FUNCT3_OP_IMM_OP.SRA: self.sra,
+            PYRSISCV_FUNCT3_BRANCH.BEQ: self.beq,
+            PYRSISCV_FUNCT3_BRANCH.BNE: self.bne,
+            PYRSISCV_FUNCT3_BRANCH.BLT: self.blt,
+            PYRSISCV_FUNCT3_BRANCH.BLTU: self.bltu,
+            PYRSISCV_FUNCT3_BRANCH.BGE: self.bge,
+            PYRSISCV_FUNCT3_BRANCH.BGEU: self.bgeu,
+        }
+
+    def __call__(self, funct3, *args):
+        if (
+            funct3 == PYRSISCV_FUNCT3_OP_IMM_OP.XOR
+            or funct3 == PYRSISCV_FUNCT3_OP_IMM_OP.OR
+            or funct3 == PYRSISCV_FUNCT3_OP_IMM_OP.AND
+        ):
             add_bitops()
         return self._exec_map[funct3](*args)
 
-    def signed(self,x):
+    def signed(self, x):
         bw = self._bw
-        if x & (1<<(bw-1)):
-            return -1*((1<<bw) - x)
+        if x & (1 << (bw - 1)):
+            return -1 * ((1 << bw) - x)
         return x
-    
-    def unsigned(self,x):
+
+    def unsigned(self, x):
         bw = self._bw
         if x < 0:
-            return (1<<bw) + x
+            return (1 << bw) + x
         return x
-    
-    def limit(self,x):
+
+    def limit(self, x):
         bw = self._bw
-        if -1*(1<<(bw-1)) <= x <= ((1<<(bw-1))-1):
+        if -1 * (1 << (bw - 1)) <= x <= ((1 << (bw - 1)) - 1):
             return x
         if x < 0:
-            bwx = len(bin(x)) - 3 # -0b
-            x = (1<<bwx) + x
-        x = x & ((1<<bw)-1)    
+            bwx = len(bin(x)) - 3  # -0b
+            x = (1 << bwx) + x
+        x = x & ((1 << bw) - 1)
         return self.signed(x)
-        
-    def slt(self,a,b):
+
+    def slt(self, a, b):
         add_arithmeticops("compare")
         return 1 if a < b else 0
 
-    def sltu(self,a,b):
+    def sltu(self, a, b):
         add_arithmeticops("compare")
         return 1 if self.unsigned(a) < self.unsigned(b) else 0
-        
-    def add(self,a,b):
-        add_arithmeticops("add")
-        return self.limit(a+b)
 
-    def sub(self,a,b):
+    def add(self, a, b):
+        add_arithmeticops("add")
+        return self.limit(a + b)
+
+    def sub(self, a, b):
         add_arithmeticops("sub")
-        return self.limit(a-b)
-    
-    def sll(self,a,b):
+        return self.limit(a - b)
+
+    def sll(self, a, b):
         add_bitops()
         b = self.unsigned(b)
         shamt = b & 0x1F
         a = self.unsigned(a)
-        return self.limit(a<<shamt)
-    
-    def sra(self,a,b):
+        return self.limit(a << shamt)
+
+    def sra(self, a, b):
         add_bitops()
         b = self.unsigned(b)
         shamt = b & 0x1F
         a = self.signed(a)
-        return self.limit(a>>shamt)    
-    
-    def srl(self,a,b):
+        return self.limit(a >> shamt)
+
+    def srl(self, a, b):
         add_bitops()
         b = self.unsigned(b)
         shamt = b & 0x1F
         a = self.unsigned(a)
-        return self.limit(a>>shamt) 
-    
-    def beq(self,a,b):
+        return self.limit(a >> shamt)
+
+    def beq(self, a, b):
         add_arithmeticops("compare")
         return a == b
-    
-    def bne(self,a,b):
+
+    def bne(self, a, b):
         add_arithmeticops("compare")
-        return a != b    
-    
-    def blt(self,a,b):
+        return a != b
+
+    def blt(self, a, b):
         add_arithmeticops("compare")
         return a < b
-    
-    def bltu(self,a,b):
+
+    def bltu(self, a, b):
         add_arithmeticops("compare")
         return self.unsigned(a) < self.unsigned(b)
-    
-    def bge(self,a,b):
+
+    def bge(self, a, b):
         add_arithmeticops("compare")
         return a >= b
-    
-    def bgeu(self,a,b):
+
+    def bgeu(self, a, b):
         add_arithmeticops("compare")
-        return self.unsigned(a) >= self.unsigned(b)    
+        return self.unsigned(a) >= self.unsigned(b)

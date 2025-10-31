@@ -4,6 +4,7 @@ last = None
 set_last = False
 switched = 0
 
+
 def add_count():
     global last, set_last, switched
     if not set_last:
@@ -11,6 +12,7 @@ def add_count():
     set_last = False
 
     stat["count"] += 1
+
 
 def add_bitops():
     global last, set_last, switched
@@ -20,7 +22,8 @@ def add_bitops():
     set_last = True
     stat["bitops"] += 1
 
-def add_arithmeticops(op_type = ""):
+
+def add_arithmeticops(op_type=""):
     if op_type != "":
         if not op_type in arithmetic_count:
             arithmetic_count[op_type] = 0
@@ -33,9 +36,11 @@ def add_arithmeticops(op_type = ""):
     set_last = True
     stat["arithmeticops"] += 1
 
+
 def get_stat():
     stat["switch_chance"] = switched / stat["count"]
     return stat
+
 
 def get_arithmetic_count():
     return arithmetic_count

@@ -15,5 +15,6 @@ class MemoryTracer:
 
     def get_memory_writes(self, addr):
         return self.memory.get(addr, [])
-    
+
+
 MEM_TRACER = MemoryTracer()
