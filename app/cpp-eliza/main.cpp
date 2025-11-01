@@ -8807,18 +8807,6 @@ int main(int argc, const char *argv[])
             return EXIT_SUCCESS;
         }
 
-        if (!nobanner)
-        {
-            std::cout
-                << "-----------------------------------------------------------------\n"
-                << "      ELIZA -- A Computer Program for the Study of Natural\n"
-                << "         Language Communication Between Man and Machine\n"
-                << "DOCTOR script (c) 1966 Association for Computing Machinery, Inc.\n"
-                << " ELIZA implementation (v1.00) by Anthony Hay, 2020-25  (CC0 1.0)\n"
-                << "-----------------------------------------------------------------\n"
-                << "Use command line option '" << as_option("help") << "' for usage information.\n";
-        }
-
         // RUN_TESTS(); // DONT run all the tests defined with DEF_TEST_FUNC
 
         elizascript::script eliza_script;
@@ -8843,9 +8831,6 @@ int main(int argc, const char *argv[])
                 std::cout << "Using script file '" << script_filename << "'\n\n\n";
             elizascript::read<std::ifstream>(script_file, eliza_script);
         }
-
-        if (!nobanner)
-            std::cout << "Enter a blank line to quit.\n\n\n";
 
         elizalogic::null_tracer notrace;
         elizalogic::string_tracer trace;
@@ -8904,6 +8889,28 @@ int main(int argc, const char *argv[])
         };
 #endif
 
+        register int a7 asm("a7") = 1025; // SYS_dump
+
+        asm volatile("ecall"
+                     :
+                     : "r"(a7)
+                     : "memory");
+
+        if (!nobanner)
+        {
+            std::cout
+                << "-----------------------------------------------------------------\n"
+                << "      ELIZA -- A Computer Program for the Study of Natural\n"
+                << "         Language Communication Between Man and Machine\n"
+                << "DOCTOR script (c) 1966 Association for Computing Machinery, Inc.\n"
+                << " ELIZA implementation (v1.00) by Anthony Hay, 2020-25  (CC0 1.0)\n"
+                << "-----------------------------------------------------------------\n"
+                << "Use command line option '" << as_option("help") << "' for usage information.\n";
+        }
+
+        if (!nobanner)
+            std::cout << "Enter 'EXIT' to quit.\n\n\n";
+
         print(join(eliza_script.hello_message));
 
         for (int cacm_index = -1;;)
@@ -8921,7 +8928,11 @@ int main(int argc, const char *argv[])
                     print(userinput);
                 }
                 else
-                    break;
+                    continue;
+            }
+            if (userinput == "EXIT")
+            {
+                break;
             }
             if (userinput[0] == '*')
             {
