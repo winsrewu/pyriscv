@@ -229,6 +229,14 @@ class PyRiscv:
                     addr_tmp = self._regs[11]
                     read_count = 0
 
+                    if len(self.input_buffer) == 0:
+                        self.input_buffer = (
+                            input(
+                                f"Enter input for read ecall (max {self._regs[12]} bytes): "
+                            )
+                            + "\n"
+                        )
+
                     for i in range(self._regs[12]):
                         if len(self.input_buffer) == 0:
                             break
