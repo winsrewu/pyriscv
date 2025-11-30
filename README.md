@@ -1,5 +1,5 @@
 # pyriscv
-A RISCV Emulator written in Python, supports RV32I instruction set.
+A RISC-V Emulator written in Python, supports RV32I instruction set.
 
 Do NOT support csr instructions.
 
