@@ -8,15 +8,9 @@ from pyriscv_operator import *
 
 
 def PyMem_Iter(_mdata):
-    _addr = 0
-    _max_addr = max(_mdata.keys())
-    while True:
-        if _addr > _max_addr:
-            return
-        else:
-            v = _addr
-            _addr += 1
-            yield v
+    addr_l = sorted(list(_mdata.keys()))
+    for addr in addr_l:
+        yield addr
 
 
 class PyMEM:
