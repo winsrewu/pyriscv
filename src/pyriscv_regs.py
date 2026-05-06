@@ -44,12 +44,12 @@ class PyRiscvRegs:
             if k < 0:
                 k += 1 << 32
 
-            s[format(i, "05b")] = format(k, "0%dx" % (self._bw / 4))
+            s[i] = PyRiscvOperator(32).signed(k)
         return s
 
     def to_dict_str(self):
         d = self.to_dict()
         s = "{"
         for k, v in d.items():
-            s += '%s: "%s", ' % (k, v)
+            s += '%s: %s, ' % (k, v)
         return s[:-2] + "}"

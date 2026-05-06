@@ -34,7 +34,7 @@ class PyRiscv:
 
             # print(f"{hex(PyRiscvOperator(32).unsigned(self._pc))}")
             # print(f"{hex(PyRiscvOperator(32).unsigned(self._pc))} : {hex(inst._d)} ({bin(inst._d)})")
-            # print(f"PC={hex(PyRiscvOperator(32).unsigned(self._pc))}")
+            # print(f"PC={PyRiscvOperator(32).unsigned(self._pc)}")
             # print("Registers: " + str(self._regs))
             # print("Registers=" + self._regs.to_dict_str())
 
