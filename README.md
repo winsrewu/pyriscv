@@ -26,15 +26,8 @@ return value is stored in a0 register.
 - write system call should only write to STDOUT, whose fileno is 1.
 - read system call should only read from STDIN, whose fileno is 0.
 - cpp is really complicated, i tried to use cpp's iostream to output, but failed (i've tested it on spike, it will try to load from 0x0, idk why). But just using g++ to compile some simple stuff is ok.
-- I now know why. There're some problems with the linker script, and i fixed it. Now most of the code should work fine.
-- Global pointer is really easy to fail, you may need to adjust it manually for different programs.
-For instance, for some programs, change that line from
-``__global_pointer$ = MIN(__PREINIT_ARRAY_BEGIN__ + 0x800,
-MAX(__DATA_BEGIN__ + 0x800, __BSS_END__ - 0x800));``
-to ``  __global_pointer$ = MIN(__SDATA_BEGIN__ + 0x800,
-MAX(__DATA_BEGIN__ + 0x800, __BSS_END__ - 0x800));`` will make it work.
-I made two versions of link script, you can check the difference between them through the build script of cpp-stream and cpp-stream-2. If this still doesn't work, you may modify the link script manually or just disable the global pointer feature
-via ``-Wl,--no-relax-gp`` option.
+- Global pointer's position is modified compared to the origin linker script.
+- There two sector in the memory, one is text, unmodifiable. And another on is data, modifiable but not executble.
 
 # system calls table
 | number | function | args | return |
