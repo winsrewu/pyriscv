@@ -1,5 +1,5 @@
 # pyriscv
-A RISC-V U-mode Emulator written in Python, supports RV32I instruction set.
+A RISC-V U-mode Emulator written in Python, supports RV32IM instruction set.
 
 Do NOT support csr instructions or privilege architecture.
 
