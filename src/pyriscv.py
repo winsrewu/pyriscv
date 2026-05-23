@@ -65,6 +65,7 @@ class PyRiscv:
         decode_map.CODECLASS = PYRSISCV_CODECLASS.FV(w[1:0])
         decode_map.OPCODE = PYRSISCV_OPCODE.FV(w[6:2])
         decode_map.FUNCT3_OP_IMM_OP = PYRSISCV_FUNCT3_OP_IMM_OP.FV(w[14:12])
+        decode_map.FUNCT3_OP_M = PYRSISCV_FUNCT3_OP_M.FV(w[14:12])
         decode_map.FUNCT3_BRANCH = PYRSISCV_FUNCT3_BRANCH.FV(w[14:12])
         decode_map.FUNCT3_LOAD_STORE = PYRSISCV_FUNCT3_LOAD_STORE.FV(w[14:12])
         decode_map.FUNCT7 = w[31:25]
@@ -89,6 +90,10 @@ class PyRiscv:
                 decode_map.FUNCT3_OP_IMM_OP = PYRSISCV_FUNCT3_OP_IMM_OP.SUB
             elif decode_map.FUNCT3_OP_IMM_OP == PYRSISCV_FUNCT3_OP_IMM_OP.SRL:
                 decode_map.FUNCT3_OP_IMM_OP = PYRSISCV_FUNCT3_OP_IMM_OP.SRA
+
+        # M extension
+        if decode_map.FUNCT7 == 0x01 and decode_map.OPCODE == PYRSISCV_OPCODE.OP:
+            decode_map.FUNCT3_OP_IMM_OP = decode_map.FUNCT3_OP_M
         return decode_map
 
     def exec(self, decode_map):

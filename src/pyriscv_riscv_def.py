@@ -31,6 +31,17 @@ class PYRSISCV_FUNCT3_OP_IMM_OP(PyRiscvEnum):
     AND = 0b111
 
 
+class PYRSISCV_FUNCT3_OP_M(PyRiscvEnum):
+    MUL = 0b000
+    MULH = 0b001
+    MULHU = 0b011
+    MULHSU = 0b010
+    DIV = 0b100
+    DIVU = 0b101
+    REM = 0b110
+    REMU = 0b111
+
+
 class PYRSISCV_FUNCT3_BRANCH(PyRiscvEnum):
     BEQ = 0b000
     BNE = 0b001
