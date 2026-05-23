@@ -27,7 +27,7 @@ return value is stored in a0 register.
 - read system call should only read from STDIN, whose fileno is 0.
 - cpp is really complicated, i tried to use cpp's iostream to output, but failed (i've tested it on spike, it will try to load from 0x0, idk why). But just using g++ to compile some simple stuff is ok.
 - Global pointer's position is modified compared to the origin linker script.
-- There two sector in the memory, one is text, unmodifiable. And another on is data, modifiable but not executble.
+- There two sector in the memory, one is text, unmodifiable. And another on is data, modifiable but not executable.
 
 # system calls table
 | number | function | args | return |
