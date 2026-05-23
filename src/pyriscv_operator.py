@@ -37,29 +37,25 @@ class PyRiscvOperator:
 
     def signed(self, x):
         bw = self._bw
-        if x & (1 << (bw - 1)):
-            return -1 * ((1 << bw) - x)
-        return x
+        mask = (1 << bw) - 1
+        val = x & mask
+        half = 1 << (bw - 1)
+        return val - (1 << bw) if val >= half else val
 
     def unsigned(self, x):
         bw = self._bw
-        if x < 0:
-            return (1 << bw) + x
-        return x
+        mask = (1 << bw) - 1
+        return x & mask
 
     def limit(self, x):
         bw = self._bw
-        if -1 * (1 << (bw - 1)) <= x <= ((1 << (bw - 1)) - 1):
-            return x
-        if x < 0:
-            bwx = len(bin(x)) - 3  # -0b
-            x = (1 << bwx) + x
-        x = x & ((1 << bw) - 1)
-        return self.signed(x)
+        mask = (1 << bw) - 1
+        truncated = x & mask
+        return self.signed(truncated)
 
     def slt(self, a, b):
         add_arithmeticops("compare")
-        return 1 if a < b else 0
+        return 1 if self.signed(a) < self.signed(b) else 0
 
     def sltu(self, a, b):
         add_arithmeticops("compare")
@@ -96,15 +92,15 @@ class PyRiscvOperator:
 
     def beq(self, a, b):
         add_arithmeticops("compare")
-        return a == b
+        return self.signed(a) == self.signed(b)
 
     def bne(self, a, b):
         add_arithmeticops("compare")
-        return a != b
+        return self.signed(a) != self.signed(b)
 
     def blt(self, a, b):
         add_arithmeticops("compare")
-        return a < b
+        return self.signed(a) < self.signed(b)
 
     def bltu(self, a, b):
         add_arithmeticops("compare")
@@ -112,7 +108,7 @@ class PyRiscvOperator:
 
     def bge(self, a, b):
         add_arithmeticops("compare")
-        return a >= b
+        return self.signed(a) >= self.signed(b)
 
     def bgeu(self, a, b):
         add_arithmeticops("compare")
