@@ -1,7 +1,7 @@
 # pyriscv
-A RISC-V Emulator written in Python, supports RV32I instruction set.
+A RISC-V U-mode Emulator written in Python, supports RV32I instruction set.
 
-Do NOT support csr instructions.
+Do NOT support csr instructions or privilege architecture.
 
 Requires:
   python3.4+
@@ -16,6 +16,7 @@ python3 ../../src/pyriscv.py app.mem
 ```
 
 # good to know
+- This project SUCKS. I am talking to you origin author.
 - This project uses Black Formatter to format python code.
 - The default entry point is 0x0.
 - FENCE and FENCE.I instructions do NOT have any effect on the emulator.
