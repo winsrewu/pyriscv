@@ -90,6 +90,9 @@ class PyRiscv:
                 decode_map.FUNCT3_OP_IMM_OP = PYRSISCV_FUNCT3_OP_IMM_OP.SUB
             elif decode_map.FUNCT3_OP_IMM_OP == PYRSISCV_FUNCT3_OP_IMM_OP.SRL:
                 decode_map.FUNCT3_OP_IMM_OP = PYRSISCV_FUNCT3_OP_IMM_OP.SRA
+        elif decode_map.FUNCT7 == 0x20 and decode_map.OPCODE == PYRSISCV_OPCODE.OP_IMM:
+            if decode_map.FUNCT3_OP_IMM_OP == PYRSISCV_FUNCT3_OP_IMM_OP.SRL:
+                decode_map.FUNCT3_OP_IMM_OP = PYRSISCV_FUNCT3_OP_IMM_OP.SRA
 
         # M extension
         if decode_map.FUNCT7 == 0x01 and decode_map.OPCODE == PYRSISCV_OPCODE.OP:
