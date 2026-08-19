@@ -1,0 +1,8 @@
+*.o
+mc
+mcx
+mctest
+*.pbm
+xsendkey
+*.elf
+*.mem

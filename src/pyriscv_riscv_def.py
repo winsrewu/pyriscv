@@ -64,3 +64,28 @@ class PYRSISCV_ECALL_NUMBER(PyRiscvEnum):
     WRITE = 64
     READ = 63
     DUMP = 1025
+    # Display device (see src/pydisplay.py and app/minecraft-1960-c/display_riscv.c).
+    # The hardware clock ticks at 20 Hz (50 ms granularity).
+    SCR_CLEAR = 2000
+    SCR_SET = 2001
+    DSP_INIT = 2002
+    DSP_PRESENT = 2003
+    DSP_SYNC = 2004
+    DSP_MS = 2005
+    DSP_SLEEP = 2006
+    INPUT_POLL = 2007
+    KEY_GET = 2008
+    KEY_PRESSED = 2009
+    # High-level drawing primitives (rendered natively in src/pygfx.py)
+    SCR_HLINE = 2010
+    SCR_VLINE = 2011
+    SCR_RECT = 2012
+    SCR_FILL = 2013
+    SCR_CHAR = 2014
+    SCR_TEXT = 2015
+    SCR_NUM = 2016
+    SCR_ICON = 2017
+    SCR_SPECKLE = 2018
+    SCR_HEART = 2019
+    SCR_FLUID = 2020
+    SCR_WORLD = 2021

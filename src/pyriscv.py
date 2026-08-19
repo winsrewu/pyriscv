@@ -1,9 +1,17 @@
+import time
+
 from pymem import PyMEM
 from pyriscv_regs import PyRiscvRegs
 from pyriscv_types import *
 from pyriscv_riscv_def import *
 from pyriscv_operator import *
 from pyriscv_stat import *
+
+
+# The emulated hardware clock ticks at 20 Hz: 50 ms granularity.  The
+# game's logic tick is 250 ms = 5 clock ticks.
+CLOCK_MS = 50
+TICK_MS = 250
 
 
 class PyRiscv:
@@ -14,6 +22,11 @@ class PyRiscv:
         self._operator = PyRiscvOperator(bw)
         self._bw = bw
         self.input_buffer = input_buffer
+        self._screen = None
+        self._tick_deadline = 0.0
+
+    def set_screen(self, screen):
+        self._screen = screen
 
     def dump(self, filename):
         with open(filename, "w") as f:
@@ -251,6 +264,120 @@ class PyRiscv:
                 self.dump("dump.txt")
                 print("Done.")
 
+            elif ecall_num == PYRSISCV_ECALL_NUMBER.SCR_CLEAR:
+                if self._screen is not None:
+                    self._screen.clear()
+
+            elif ecall_num == PYRSISCV_ECALL_NUMBER.SCR_SET:
+                if self._screen is not None:
+                    self._screen.set_pixel(self._regs[10], self._regs[11])
+
+            elif ecall_num == PYRSISCV_ECALL_NUMBER.DSP_INIT:
+                if self._screen is not None:
+                    self._screen.init()
+
+            elif ecall_num == PYRSISCV_ECALL_NUMBER.DSP_PRESENT:
+                if self._screen is not None:
+                    self._screen.present()
+                    if self._screen.should_quit():
+                        self._exit = True
+
+            elif ecall_num == PYRSISCV_ECALL_NUMBER.DSP_SYNC:
+                if self._screen is not None:
+                    self._screen.present()
+                    if self._screen.should_quit():
+                        self._exit = True
+                now = time.monotonic()
+                if self._tick_deadline <= now:
+                    self._tick_deadline = now
+                self._tick_deadline += TICK_MS / 1000.0
+                delay = self._tick_deadline - now
+                if delay > 0:
+                    time.sleep(delay)
+
+            elif ecall_num == PYRSISCV_ECALL_NUMBER.DSP_MS:
+                # 20 Hz hardware clock: time quantised to 50 ms ticks.
+                self._regs[10] = (int(time.monotonic() * 1000.0) // CLOCK_MS) * CLOCK_MS
+
+            elif ecall_num == PYRSISCV_ECALL_NUMBER.DSP_SLEEP:
+                time.sleep(self._regs[10] / 1000.0)
+
+            elif ecall_num == PYRSISCV_ECALL_NUMBER.INPUT_POLL:
+                if self._screen is not None:
+                    self._screen.poll_input()
+                    if self._screen.should_quit():
+                        self._exit = True
+
+            elif ecall_num == PYRSISCV_ECALL_NUMBER.KEY_GET:
+                if self._screen is not None:
+                    self._regs[10] = self._screen.key(self._regs[10])
+                else:
+                    self._regs[10] = 0
+
+            elif ecall_num == PYRSISCV_ECALL_NUMBER.KEY_PRESSED:
+                if self._screen is not None:
+                    self._regs[10] = self._screen.kpressed(self._regs[10])
+                else:
+                    self._regs[10] = 0
+
+            elif ecall_num == PYRSISCV_ECALL_NUMBER.SCR_HLINE:
+                if self._screen is not None:
+                    self._screen.gfx_hline(self._regs[10], self._regs[11], self._regs[12])
+
+            elif ecall_num == PYRSISCV_ECALL_NUMBER.SCR_VLINE:
+                if self._screen is not None:
+                    self._screen.gfx_vline(self._regs[10], self._regs[11], self._regs[12])
+
+            elif ecall_num == PYRSISCV_ECALL_NUMBER.SCR_RECT:
+                if self._screen is not None:
+                    self._screen.gfx_rect(self._regs[10], self._regs[11], self._regs[12], self._regs[13])
+
+            elif ecall_num == PYRSISCV_ECALL_NUMBER.SCR_FILL:
+                if self._screen is not None:
+                    self._screen.gfx_fill(self._regs[10], self._regs[11], self._regs[12], self._regs[13])
+
+            elif ecall_num == PYRSISCV_ECALL_NUMBER.SCR_CHAR:
+                if self._screen is not None:
+                    self._screen.gfx_char(self._regs[10], self._regs[11], chr(self._regs[12]))
+
+            elif ecall_num == PYRSISCV_ECALL_NUMBER.SCR_TEXT:
+                if self._screen is not None:
+                    x = self._regs[10]
+                    y = self._regs[11]
+                    ptr = self._regs[12]
+                    chars = []
+                    while True:
+                        c = self._dmem[ptr]
+                        if c == 0:
+                            break
+                        chars.append(chr(c))
+                        ptr += 1
+                    self._screen.gfx_text(x, y, "".join(chars))
+
+            elif ecall_num == PYRSISCV_ECALL_NUMBER.SCR_NUM:
+                if self._screen is not None:
+                    self._screen.gfx_num(self._regs[10], self._regs[11], self._regs[12])
+
+            elif ecall_num == PYRSISCV_ECALL_NUMBER.SCR_ICON:
+                if self._screen is not None:
+                    self._screen.gfx_icon(self._regs[10], self._regs[11], self._regs[12], self._regs[13])
+
+            elif ecall_num == PYRSISCV_ECALL_NUMBER.SCR_SPECKLE:
+                if self._screen is not None:
+                    self._screen.gfx_speckle(self._regs[10], self._regs[11], self._regs[12], self._regs[13], self._regs[14])
+
+            elif ecall_num == PYRSISCV_ECALL_NUMBER.SCR_HEART:
+                if self._screen is not None:
+                    self._screen.gfx_heart(self._regs[10], self._regs[11], self._regs[12])
+
+            elif ecall_num == PYRSISCV_ECALL_NUMBER.SCR_FLUID:
+                if self._screen is not None:
+                    self._screen.gfx_fluid(self._regs[10], self._regs[11], self._regs[12], self._regs[13], self._regs[14])
+
+            elif ecall_num == PYRSISCV_ECALL_NUMBER.SCR_WORLD:
+                if self._screen is not None:
+                    self._screen.gfx_world(self._dmem, self._regs[10], self._regs[11], self._regs[12], self._regs[13], self._regs[14])
+
             else:
                 raise Exception("Invalid ecall number", self._regs[17])
 
@@ -262,10 +389,30 @@ class PyRiscv:
 
 if __name__ == "__main__":
     import sys
+    import argparse
 
-    dmem = PyMEM(sys.argv[1])
-    input_buffer = sys.argv[2]
+    parser = argparse.ArgumentParser(description="pyriscv RISC-V emulator")
+    parser.add_argument("memfile", help="path to the .mem file")
+    parser.add_argument("input_buffer", nargs="?", default="", help="initial stdin buffer")
+    parser.add_argument(
+        "--no-display",
+        action="store_true",
+        help="disable the terminal screen device",
+    )
+    parser.add_argument("--scale", type=int, default=4, help="screen downscale factor")
+    args = parser.parse_args()
 
-    emulator = PyRiscv(dmem, reset_vec=0x00000000, input_buffer=input_buffer)
-    instance = emulator
-    emulator.run()
+    dmem = PyMEM(args.memfile)
+
+    emulator = PyRiscv(dmem, reset_vec=0x00000000, input_buffer=args.input_buffer)
+
+    if not args.no_display:
+        from pydisplay import PyDisplay
+
+        emulator.set_screen(PyDisplay(192, 168, scale=args.scale))
+
+    try:
+        emulator.run()
+    finally:
+        if emulator._screen is not None:
+            emulator._screen.close()

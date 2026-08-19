@@ -3,11 +3,6 @@ A RISC-V U-mode Emulator written in Python, supports RV32IM instruction set.
 
 Do NOT support csr instructions or privilege architecture.
 
-Requires:
-  python3.4+
-  
-No other libraries!!
-
 # run
 ```bash
 cd app/c
