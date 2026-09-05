@@ -65,10 +65,13 @@ class PYRSISCV_ECALL_NUMBER(PyRiscvEnum):
     READ = 63
     DUMP = 1025
     # Standardized screen (optional device, see src/pyscreen.py).
-    # a0 = word-aligned pointer to int[192*168] in guest data memory,
-    # one 32-bit word per pixel: 0 = black, nonzero = white.  Screen
-    # geometry is fixed at compile time on both sides.  The ecall is a
-    # no-op when no display device is attached.
+    # a0 = word-aligned pointer to the guest's int[W*H] framebuffer in
+    # data memory (one 32-bit word per pixel: 0 = black, nonzero =
+    # white).  W and H are guest-defined: the demo sets them as SCR_W/
+    # SCR_H in app/gfx-saver/main.c and the MC backend reads them from
+    # riscvmc2 src/python/config.py (screen_width/screen_height) --
+    # change those together.  The ecall is a no-op when no display
+    # device is attached.
     SCR_DRAW = 2000
     # Game tick clock (1 game tick = 1/20 s = 50 ms).  GT_GET: a0 = the
     # current game tick counter.  GT_WAIT: pause execution until the

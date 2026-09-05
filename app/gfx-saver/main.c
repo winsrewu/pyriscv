@@ -9,6 +9,17 @@
  * The framebuffer lives in the reserved .screenfb window at the fixed
  * base _screen_fb (see app/c-common/link.ld, currently 0x30000000).
  *
+ * Changing SCR_W/SCR_H touches every place that sizes the screen --
+ * keep them in sync:
+ *   - this file's SCR_W / SCR_H, then rebuild (./build.sh);
+ *   - app/c-common/link.ld: SCREENFB LENGTH (0x80000 covers up to
+ *     131072 pixels) -- only when the fb no longer fits;
+ *   - riscvmc2 src/python/config.py: screen_width / screen_height;
+ *   - windowed runs: pass the same size via pyriscv.py --width/--height.
+ * The MC wall placement (position / orientation / enabled) is
+ * riscvmc2-side config only (screen_origin/screen_facing/screen_top/
+ * screen_enabled) and needs no guest change.
+ *
  * Timing & input (game tick clock, 1 gt = 1/20 s):
  *   a7 = 2001 (GT_GET)   a0 = current game tick
  *   a7 = 2002 (GT_WAIT)  pause until the next game tick

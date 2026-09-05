@@ -46,12 +46,12 @@ return value is stored in a0 register.
   it the emulator stays headless and ecall 2000 is a no-op.  pygame is
   only imported when the screen is requested.
 - Geometry is a **launch parameter**: `--width W --height H` (defaults
-  192x168, matching the compile-time geometry of app/gfx-saver/main.c and
-  the riscvmc2 MC wall).  Row-major, origin at the top-left.  Presenting
-  another size only makes sense together with a guest built for that size
-  (guest fb array in app/gfx-saver/main.c, the .screenfb window in
-  app/c-common/link.ld, and riscvmc2 plugin/screen_gen.py are all
-  compile-time sized).
+  192x168, matching app/gfx-saver/main.c and the riscvmc2 MC wall).
+  Row-major, origin at the top-left.  Presenting another size only makes
+  sense together with a guest built for that size: the guest size is
+  SCR_W/SCR_H in app/gfx-saver/main.c, the MC backend reads it from
+  riscvmc2 src/python/config.py (screen_width/screen_height), and the
+  .screenfb window in app/c-common/link.ld must fit it.
 - The guest presents an `int[width * height]` framebuffer in its data
   memory with the single ecall 2000: a0 = word-aligned fb pointer, one
   32-bit word per pixel, 0 = black, nonzero = white.  A misaligned pointer

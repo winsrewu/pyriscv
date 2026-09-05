@@ -331,9 +331,10 @@ if __name__ == "__main__":
     scale = 4
     # Screen size is a launch parameter (default matches the compile-time
     # geometry of app/gfx-saver and the MC wall).  Presenting a different
-    # size only makes sense together with a guest that draws that size;
-    # the guest side (app/gfx-saver/main.c, app/c-common/link.ld .screenfb
-    # window) and riscvmc2 plugin/screen_gen.py are compile-time sized.
+    # size only makes sense together with a guest that draws that size:
+    # change app/gfx-saver/main.c (SCR_W/SCR_H), app/c-common/link.ld
+    # (SCREENFB LENGTH, only when the buffer outgrows it) and riscvmc2
+    # src/python/config.py (screen_width/screen_height) together.
     scr_w, scr_h = 192, 168
     # Key number -> input key registration (KEY_GET ecall).  Values are
     # resolved to pygame keys when the window opens (single char like "w",

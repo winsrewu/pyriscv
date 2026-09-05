@@ -12,9 +12,12 @@ MEMORY
   TEXT (rx) : ORIGIN = 0x00000000, LENGTH = 512M
   DATA (rw) : ORIGIN = 0x20000000, LENGTH = 512M
   /* Reserved framebuffer window for the standardized screen ecall (2000).
-     Must cover SCR_W * SCR_H * 4 (currently 192*168*4).  Keep in sync
-     with src/pyscreen.py (SCR_W/SCR_H), app/gfx-saver/main.c and the
-     riscvmc2 screen config. */
+     Capacity 0x80000 bytes = 131072 pixels (the default demo guest is
+     192*168 = 32256 pixels).  Only needs changing when a bigger guest
+     framebuffer no longer fits.  The guest size is SCR_W/SCR_H in
+     app/gfx-saver/main.c, mirrored on the MC side by riscvmc2
+     src/python/config.py (screen_width / screen_height) -- keep the
+     three in sync. */
   SCREENFB (rw) : ORIGIN = 0x30000000, LENGTH = 0x80000
 }
 
