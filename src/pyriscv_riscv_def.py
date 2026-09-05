@@ -64,3 +64,20 @@ class PYRSISCV_ECALL_NUMBER(PyRiscvEnum):
     WRITE = 64
     READ = 63
     DUMP = 1025
+    # Standardized screen (optional device, see src/pyscreen.py).
+    # a0 = word-aligned pointer to int[192*168] in guest data memory,
+    # one 32-bit word per pixel: 0 = black, nonzero = white.  Screen
+    # geometry is fixed at compile time on both sides.  The ecall is a
+    # no-op when no display device is attached.
+    SCR_DRAW = 2000
+    # Game tick clock (1 game tick = 1/20 s = 50 ms).  GT_GET: a0 = the
+    # current game tick counter.  GT_WAIT: pause execution until the
+    # counter moves to the next game tick.  Implemented by the emulator
+    # core, independent of the (optional) screen device.
+    GT_GET = 2001
+    GT_WAIT = 2002
+    # KEY_GET: a0 = key number -> a0 = 1 if that key is held down.  Keys
+    # have no built-in meaning; the launch configuration maps each number
+    # to a real input key (pyriscv.py --key <n>=<name>, see pyscreen.py).
+    # Returns 0 for unregistered numbers or when no window is attached.
+    KEY_GET = 2003

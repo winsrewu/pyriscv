@@ -59,6 +59,17 @@ class PyMEM:
 
         self._mdata[PyRiscvOperator(32).unsigned(addr)] = data
 
+    def read_bytes(self, addr, count):
+        """Return `count` consecutive bytes starting at `addr`.
+
+        Memory is byte-addressed; unwritten bytes read as 0.  Used by
+        optional devices (e.g. the screen) that need a fast contiguous
+        snapshot of a guest region.
+        """
+        base = PyRiscvOperator(32).unsigned(addr)
+        m = self._mdata
+        return bytes(m.get(base + i, 0) for i in range(count))
+
     def keys(self):
         return PyMem_Iter(self._mdata)
 

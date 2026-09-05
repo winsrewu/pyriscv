@@ -1,4 +1,7 @@
+import time
+
 from pymem import PyMEM
+
 from pyriscv_regs import PyRiscvRegs
 from pyriscv_types import *
 from pyriscv_riscv_def import *
@@ -14,6 +17,31 @@ class PyRiscv:
         self._operator = PyRiscvOperator(bw)
         self._bw = bw
         self.input_buffer = input_buffer
+        # Optional display device (see pyscreen.py).  None keeps the
+        # emulator headless: the SCR_DRAW ecall is then a no-op.
+        self._screen = None
+        # Game tick clock: 1 tick = 1/20 s, counted from emulator start.
+        self._gt_base = time.monotonic()
+
+    def set_screen(self, screen):
+        self._screen = screen
+
+    def gt_now(self):
+        """Current game tick (1/20 s since the emulator started)."""
+        return int((time.monotonic() - self._gt_base) * 20)
+
+    def gt_wait(self):
+        """Pause execution until the game tick counter moves to the next tick."""
+        cur = self.gt_now()
+        while self.gt_now() == cur:
+            nxt = self._gt_base + (cur + 1) / 20.0
+            time.sleep(max(0.0, nxt - time.monotonic()))
+
+    def key_down(self, n):
+        """1 if key number n is held down; needs a windowed screen device."""
+        if self._screen is not None and hasattr(self._screen, "key_down"):
+            return self._screen.key_down(n)
+        return 0
 
     def dump(self, filename):
         with open(filename, "w") as f:
@@ -251,6 +279,28 @@ class PyRiscv:
                 self.dump("dump.txt")
                 print("Done.")
 
+            elif ecall_num == PYRSISCV_ECALL_NUMBER.SCR_DRAW:
+                # Standardized screen draw.  a0 = fb pointer; the screen
+                # geometry is fixed (see pyscreen.py).  Optional device:
+                # without one attached this is a no-op.  draw() returns
+                # False when the window is closed (or --frames is reached),
+                # which stops the emulator.
+                if self._screen is not None:
+                    if not self._screen.draw(self._dmem, self._regs[10]):
+                        self._exit = True
+
+            elif ecall_num == PYRSISCV_ECALL_NUMBER.GT_GET:
+                # current game tick (1/20 s clock)
+                self._regs[10] = self.gt_now()
+
+            elif ecall_num == PYRSISCV_ECALL_NUMBER.GT_WAIT:
+                # pause until the next game tick
+                self.gt_wait()
+
+            elif ecall_num == PYRSISCV_ECALL_NUMBER.KEY_GET:
+                # a0 = key number -> held flag (registered at launch)
+                self._regs[10] = self.key_down(self._regs[10])
+
             else:
                 raise Exception("Invalid ecall number", self._regs[17])
 
@@ -263,9 +313,67 @@ class PyRiscv:
 if __name__ == "__main__":
     import sys
 
-    dmem = PyMEM(sys.argv[1])
-    input_buffer = sys.argv[2]
+    args = sys.argv[1:]
+    if not args:
+        raise SystemExit("usage: pyriscv.py <app.mem> [input] [--screen] "
+                         "[--dump out.ppm] [--frames N] [--scale N] "
+                         "[--width W] [--height H] [--key <n>=<key>]")
+    dmem = PyMEM(args[0])
+    args = args[1:]
+
+    input_buffer = ""
+    if args and not args[0].startswith("--"):
+        input_buffer = args.pop(0)
+
+    screen_mode = None  # None | "window" | "headless"
+    dump_path = None
+    max_frames = 0
+    scale = 4
+    # Screen size is a launch parameter (default matches the compile-time
+    # geometry of app/gfx-saver and the MC wall).  Presenting a different
+    # size only makes sense together with a guest that draws that size;
+    # the guest side (app/gfx-saver/main.c, app/c-common/link.ld .screenfb
+    # window) and riscvmc2 plugin/screen_gen.py are compile-time sized.
+    scr_w, scr_h = 192, 168
+    # Key number -> input key registration (KEY_GET ecall).  Values are
+    # resolved to pygame keys when the window opens (single char like "w",
+    # or a name like "up"/"space"); see pyscreen.py.
+    keymap = {}
+    while args:
+        a = args.pop(0)
+        if a == "--screen":
+            screen_mode = "window"
+        elif a == "--dump":
+            if not args:
+                raise SystemExit("--dump needs a file path")
+            screen_mode = "headless"
+            dump_path = args.pop(0)
+        elif a == "--frames":
+            max_frames = int(args.pop(0))
+        elif a == "--scale":
+            scale = int(args.pop(0))
+        elif a == "--width":
+            scr_w = int(args.pop(0))
+        elif a == "--height":
+            scr_h = int(args.pop(0))
+        elif a == "--key":
+            if not args:
+                raise SystemExit("--key needs <n>=<name>")
+            pair = args.pop(0)
+            n, _, name = pair.partition("=")
+            keymap[int(n)] = name
+        else:
+            raise SystemExit(f"Unknown argument: {a}")
 
     emulator = PyRiscv(dmem, reset_vec=0x00000000, input_buffer=input_buffer)
-    instance = emulator
+    if screen_mode is not None:
+        # Optional display module; imported lazily so the core emulator
+        # never depends on pygame unless a screen is requested.
+        from pyscreen import Screen
+
+        emulator.set_screen(
+            Screen(mode=screen_mode, dump_path=dump_path,
+                   max_frames=max_frames, scale=scale,
+                   width=scr_w, height=scr_h, keymap=keymap)
+        )
     emulator.run()

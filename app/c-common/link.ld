@@ -11,6 +11,11 @@ MEMORY
 {
   TEXT (rx) : ORIGIN = 0x00000000, LENGTH = 512M
   DATA (rw) : ORIGIN = 0x20000000, LENGTH = 512M
+  /* Reserved framebuffer window for the standardized screen ecall (2000).
+     Must cover SCR_W * SCR_H * 4 (currently 192*168*4).  Keep in sync
+     with src/pyscreen.py (SCR_W/SCR_H), app/gfx-saver/main.c and the
+     riscvmc2 screen config. */
+  SCREENFB (rw) : ORIGIN = 0x30000000, LENGTH = 0x80000
 }
 
 SECTIONS
@@ -328,6 +333,16 @@ SECTIONS
   .gnu.attributes 0 : { KEEP (*(.gnu.attributes)) } > DATA
 
   /DISCARD/ : { *(.note.GNU-stack) *(.gnu_debuglink) *(.gnu.lto_*) *(.gnu_object_only) }
+
+  /* Guest framebuffer window, placed before the .others catch-all.
+     Apps put their screen buffer here with section(".screenfb") -- see
+     app/gfx-saver/main.c.  _screen_fb is the fixed base address (also
+     used by the MC backend for compile-time expansion). */
+  .screenfb (NOLOAD) : {
+    . = ALIGN(4);
+    KEEP(*(.screenfb .screenfb.*))
+  } > SCREENFB
+  PROVIDE(_screen_fb = ORIGIN(SCREENFB));
 
   .others : {
     *(.*)
