@@ -49,6 +49,13 @@ class Screen:
         # ("up", "space", ...); resolved lazily once pygame is available.
         self._keymap = dict(keymap or {})
         self._key_codes = None
+        # Press latch for short taps: a KEYDOWN sets _press[n]=1 and it is
+        # read-and-cleared by key_down().  Combined with the live held
+        # state this gives a "sticky level": a held key reads 1 every
+        # frame, and a tap shorter than a frame still reads 1 once.
+        self._press = {}
+        self._num_of_code = {}
+        self._quit = False
         # Current frame as 0/1 bytes per pixel, top-left origin.
         self.fb = bytearray(self.w * self.h)
         self._mode = mode
@@ -77,6 +84,7 @@ class Screen:
                 n: self._resolve_key(pygame, v)
                 for n, v in self._keymap.items()
             }
+            self._num_of_code = {code: n for n, code in self._key_codes.items()}
             self._surface = pygame.display.set_mode(
                 (self.w * self._scale, self.h * self._scale)
             )
@@ -101,13 +109,41 @@ class Screen:
         return getattr(pygame, "K_" + s.upper(), None)
 
     def key_down(self, n):
-        """1 if key number n is held down (0 when no window / unregistered)."""
+        """Sticky level: 1 if key number n is held down OR was pressed
+        since the last read.
+
+        The held state is live (pygame.key.get_pressed), so holding a
+        key reads 1 every frame (long-press).  A KEYDOWN also latches a
+        one-shot flag, so a tap shorter than a frame interval still
+        reads 1 once instead of being lost.  The latch is cleared by
+        this read."""
         if self._mode != "window" or not self._key_codes:
             return 0
         code = self._key_codes.get(n)
         if code is None:
             return 0
-        return 1 if self._pygame.key.get_pressed()[code] else 0
+        self._drain_events()
+        held = 1 if self._pygame.key.get_pressed()[code] else 0
+        pressed = self._press.get(n, 0)
+        self._press[n] = 0
+        return 1 if (held or pressed) else 0
+
+    def _drain_events(self):
+        """Pump the pygame event queue into the press latch + quit flag.
+
+        Idempotent: the queue is empty after this until new events
+        arrive.  pygame refreshes key.get_pressed() whenever the queue
+        is pumped, so the live held view is also kept current here."""
+        for event in self._pygame.event.get():
+            if event.type == self._pygame.QUIT:
+                self._quit = True
+            elif event.type == self._pygame.KEYDOWN:
+                if event.key == self._pygame.K_ESCAPE:
+                    self._quit = True
+                else:
+                    n = self._num_of_code.get(event.key)
+                    if n is not None:
+                        self._press[n] = 1
 
     def draw(self, dmem, fb_ptr):
         """Read the guest framebuffer at fb_ptr and present it.
@@ -132,11 +168,9 @@ class Screen:
 
     def _present_window(self):
         pygame = self._pygame
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                return False
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                return False
+        self._drain_events()
+        if self._quit:
+            return False
 
         surf = pygame.image.frombuffer(self.fb, (self.w, self.h), "P")
         surf.set_palette([_BLACK, _WHITE])

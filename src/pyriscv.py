@@ -21,24 +21,46 @@ class PyRiscv:
         # emulator headless: the SCR_DRAW ecall is then a no-op.
         self._screen = None
         # Game tick clock: 1 tick = 1/20 s, counted from emulator start.
+        # _fast scales the guest-visible clock (--fast N): virtual time
+        # runs N x faster than real time and gt_wait sleeps N x less.
+        # Meant for headless smoke runs; default 1 = real time.
+        self._fast = 1
         self._gt_base = time.monotonic()
+        # Headless key-injection script (--keyseq).  When set, key_down()
+        # ignores the window and each KEY_GET ecall advances a script
+        # pointer, returning 1 iff the scripted key number matches `n`.
+        # Repeat a key number once per read to simulate a held key.
+        self._script = None
+        self._script_i = 0
 
     def set_screen(self, screen):
         self._screen = screen
 
     def gt_now(self):
-        """Current game tick (1/20 s since the emulator started)."""
-        return int((time.monotonic() - self._gt_base) * 20)
+        """Current game tick (1/20 s of virtual time)."""
+        return int((time.monotonic() - self._gt_base) * 20 * self._fast)
 
     def gt_wait(self):
-        """Pause execution until the game tick counter moves to the next tick."""
+        """Pause until the game tick counter moves to the next tick."""
         cur = self.gt_now()
         while self.gt_now() == cur:
-            nxt = self._gt_base + (cur + 1) / 20.0
+            nxt = self._gt_base + (cur + 1) / (20.0 * self._fast)
             time.sleep(max(0.0, nxt - time.monotonic()))
 
     def key_down(self, n):
-        """1 if key number n is held down; needs a windowed screen device."""
+        """Return 1 if key number n is held down OR was pressed since the
+        last read (sticky level; see Screen.key_down).
+
+        Holding a key reads 1 every frame (long-press); a brief tap
+        latches and reads 1 once so it is not lost.
+
+        With --keyseq (headless test aid) the window is ignored and each
+        KEY_GET ecall advances a script pointer instead, returning 1 iff
+        the scripted key number matches `n`; the sequence cycles."""
+        if self._script is not None:
+            v = 1 if self._script[self._script_i % len(self._script)] == n else 0
+            self._script_i += 1
+            return v
         if self._screen is not None and hasattr(self._screen, "key_down"):
             return self._screen.key_down(n)
         return 0
@@ -317,7 +339,8 @@ if __name__ == "__main__":
     if not args:
         raise SystemExit("usage: pyriscv.py <app.mem> [input] [--screen] "
                          "[--dump out.ppm] [--frames N] [--scale N] "
-                         "[--width W] [--height H] [--key <n>=<key>]")
+                         "[--width W] [--height H] [--key <n>=<key>] "
+                         "[--fast N] [--keyseq n,n,...]")
     dmem = PyMEM(args[0])
     args = args[1:]
 
@@ -329,6 +352,8 @@ if __name__ == "__main__":
     dump_path = None
     max_frames = 0
     scale = 4
+    fast = 1
+    keyseq = None
     # Screen size is a launch parameter (default matches the compile-time
     # geometry of app/gfx-saver and the MC wall).  Presenting a different
     # size only makes sense together with a guest that draws that size:
@@ -357,6 +382,10 @@ if __name__ == "__main__":
             scr_w = int(args.pop(0))
         elif a == "--height":
             scr_h = int(args.pop(0))
+        elif a == "--fast":
+            fast = max(1, int(args.pop(0)))
+        elif a == "--keyseq":
+            keyseq = [int(x) for x in args.pop(0).split(",")]
         elif a == "--key":
             if not args:
                 raise SystemExit("--key needs <n>=<name>")
@@ -367,6 +396,8 @@ if __name__ == "__main__":
             raise SystemExit(f"Unknown argument: {a}")
 
     emulator = PyRiscv(dmem, reset_vec=0x00000000, input_buffer=input_buffer)
+    emulator._fast = fast
+    emulator._script = keyseq
     if screen_mode is not None:
         # Optional display module; imported lazily so the core emulator
         # never depends on pygame unless a screen is requested.
