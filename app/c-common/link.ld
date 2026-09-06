@@ -349,9 +349,8 @@ SECTIONS
 
   .others : {
     *(.*)
+    . = ALIGN(8);
   } > DATA
-
-  . = ALIGN(8);
 
   /* Heap */
   .heap : {
