@@ -333,6 +333,8 @@ SECTIONS
     *(.*)
   } > DATA
 
+  . = ALIGN(8);
+
   /* Heap */
   .heap : {
     . = ALIGN(8);
